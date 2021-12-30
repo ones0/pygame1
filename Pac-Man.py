@@ -96,12 +96,12 @@ class StartScreen():
                     if x >= 160 and y >= 465:
                         if x <= 465 and y <= 582:
                             pygame.mixer.music.pause()
-                            return  # начинаем игру
+                            return
             pygame.display.flip()
             clock.tick(FPS)
 
 
-def win():  # победа
+def win():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     global opened_levels, level_list
@@ -215,7 +215,7 @@ def try_again():
 
                 player.start_pos()
                 player.status = 'идет игра'
-                return  # начинаем игру
+                return
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -255,9 +255,10 @@ def level_choose():
                     if lt.x < event.pos[0] < lt.x + lt.width and lt.y < \
                             event.pos[1] < lt.y + lt.height:
                         if level_list[num_level][1] == 0:
-                            return num_level + 1  # начинаем игру
+                            return num_level + 1
         pygame.display.flip()
         clock.tick(FPS)
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('data/40/', name)
@@ -277,18 +278,13 @@ def load_image(name, colorkey=None):
 def load_level(filename):
     level_map = []
     filename = "level/" + filename
-    # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         widht = int(mapFile.readline()[6:].rstrip())
         height = int(mapFile.readline()[7:].rstrip())
         background = mapFile.readline()[11:]
         for line in mapFile:
             level_map.append(line.rstrip(',\n').split(','))
-    # и подсчитываем максимальную длину
-    # max_width = max(map(len, level_map))
     return level_map
-    # дополняем каждую строку пустыми клетками ('.')
-    # return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
 class Life(pygame.sprite.Sprite):
@@ -395,11 +391,8 @@ class Player(pygame.sprite.Sprite):
         if cherry in cherry_group:
             for ghost in list_ghost:
                 ghost.start_ticks = pygame.time.get_ticks()
-                # print(ghost.start_ticks)
             self.score += 50
             cherry.kill()
         if not point_group:
             self.status = 'выигрыш'
             print('Game end')
-
-
