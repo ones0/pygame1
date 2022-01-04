@@ -96,12 +96,12 @@ class StartScreen():
                     if x >= 160 and y >= 465:
                         if x <= 465 and y <= 582:
                             pygame.mixer.music.pause()
-                            return
+                            return  # начинаем игру
             pygame.display.flip()
             clock.tick(FPS)
 
 
-def win():
+def win():  # победа
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
     global opened_levels, level_list
@@ -215,7 +215,7 @@ def try_again():
 
                 player.start_pos()
                 player.status = 'идет игра'
-                return
+                return  # начинаем игру
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -255,7 +255,7 @@ def level_choose():
                     if lt.x < event.pos[0] < lt.x + lt.width and lt.y < \
                             event.pos[1] < lt.y + lt.height:
                         if level_list[num_level][1] == 0:
-                            return num_level + 1
+                            return num_level + 1  # начинаем игру
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -278,13 +278,18 @@ def load_image(name, colorkey=None):
 def load_level(filename):
     level_map = []
     filename = "level/" + filename
+    # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         widht = int(mapFile.readline()[6:].rstrip())
         height = int(mapFile.readline()[7:].rstrip())
         background = mapFile.readline()[11:]
         for line in mapFile:
             level_map.append(line.rstrip(',\n').split(','))
+    # и подсчитываем максимальную длину
+    # max_width = max(map(len, level_map))
     return level_map
+    # дополняем каждую строку пустыми клетками ('.')
+    # return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
 class Life(pygame.sprite.Sprite):
@@ -391,8 +396,156 @@ class Player(pygame.sprite.Sprite):
         if cherry in cherry_group:
             for ghost in list_ghost:
                 ghost.start_ticks = pygame.time.get_ticks()
+                # print(ghost.start_ticks)
             self.score += 50
             cherry.kill()
         if not point_group:
             self.status = 'выигрыш'
             print('Game end')
+
+
+class Coins(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(coins_group, all_sprites)
+        self.image = load_image(tile_type + '.png')
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+
+
+class Point(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(point_group, all_sprites)
+        self.image = load_image(tile_type + '.png')
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+
+
+class Cherry(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(cherry_group, all_sprites)
+        self.image = load_image(tile_type + '.png')
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+
+
+class Ghost(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(ghost_group, all_sprites)
+        self.start_pos_x = pos_x
+        self.start_pos_y = pos_y
+        self.start_picture = tile_type
+        self.image = load_image(tile_type + '.png')
+        self.rect = self.image.get_rect().move(tile_width * pos_x,
+                                               tile_height * pos_y)
+        self.speed = 2
+        self.direction = 'down'
+        self.list_dir = ['up', 'left', 'down', 'right']
+        self.timer = 60
+        self.start_ticks = -5000
+
+    def update(self, *args):
+        self.moving()
+        self.time_scale()
+
+    def start_pos(self):
+        self.rect.move(self.start_pos_x * tile_width,
+                       self.start_pos_y * tile_height)
+
+    def moving(self):
+        possible_dir = self.list_dir.copy()
+        if self.direction == 'up':
+            back_move = 'down'
+        if self.direction == 'down':
+            back_move = 'up'
+        if self.direction == 'left':
+            back_move = 'right'
+        if self.direction == 'right':
+            back_move = 'left'
+        possible_dir.remove(back_move)
+        not_variant = True
+        while possible_dir:
+            rnd_n = randint(0, len(possible_dir) - 1)
+            rnd_dir = possible_dir.pop(rnd_n)
+            if rnd_dir == 'up':
+                self.rect.y -= self.speed
+                if pygame.sprite.spritecollideany(self, wall_group):
+                    self.rect.y += self.speed
+                    continue
+                self.direction = 'up'
+                not_variant = False
+                self.image = load_image(
+                    str(int(self.start_picture) + 3) + '.png')
+                break
+            if rnd_dir == 'down':
+                self.rect.y += self.speed
+                if pygame.sprite.spritecollideany(self, wall_group):
+                    self.rect.y -= self.speed
+                    continue
+                self.direction = 'down'
+                not_variant = False
+                self.image = load_image(self.start_picture + '.png')
+                break
+            if rnd_dir == 'left':
+                self.rect.x -= self.speed
+                if pygame.sprite.spritecollideany(self, wall_group):
+                    self.rect.x += self.speed
+                    continue
+                self.direction = 'left'
+                not_variant = False
+                self.image = load_image(
+                    str(int(self.start_picture) + 2) + '.png')
+                break
+            if rnd_dir == 'right':
+                self.rect.x += self.speed
+                if pygame.sprite.spritecollideany(self, wall_group):
+                    self.rect.x -= self.speed
+                    continue
+                self.direction = 'right'
+                not_variant = False
+                self.image = load_image(
+                    str(int(self.start_picture) + 1) + '.png')
+                break
+        if not_variant:
+            if back_move == 'up':
+                self.rect.y -= self.speed
+            if back_move == 'down':
+                self.rect.y += self.speed
+            if back_move == 'left':
+                self.rect.x -= self.speed
+            if back_move == 'right':
+                self.rect.x += self.speed
+            self.direction = back_move
+
+    def time_scale(self):
+        seconds = (pygame.time.get_ticks() - self.start_ticks) / 1000
+        if seconds < 5:
+            self.speed = 1
+        else:
+            self.speed = 2
+
+
+def generate_level(level):
+    list_sprites = []
+    list_ghost = []
+    new_player, x, y = None, None, None
+    for y in range(len(level)):
+        for x, name in enumerate(level[y]):
+            if int(name) >= 172 and int(name) <= 233:
+                Wall(name, x, y)
+            if int(name) == 1:
+                Coins(name, x, y)
+            if int(name) == 91:
+                new_player = Player(x, y)
+                list_sprites.append(Life(11, 15))
+                list_sprites.append(Life(12, 15))
+                list_sprites.append(Life(13, 15))
+            if 27 <= int(name) <= 30 or 44 <= int(name) <= 47:
+                list_ghost.append(Ghost(name, x, y))
+            if int(name) == 14:
+                Point(name, x, y)
+            if int(name) == 48:
+                Cherry(name, x, y)
+    # вернем игрока, а также размер поля в клетках
+    return new_player, x + 1, y + 2, list_sprites, list_ghost
+
+
