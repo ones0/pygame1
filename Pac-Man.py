@@ -549,3 +549,112 @@ def generate_level(level):
     return new_player, x + 1, y + 2, list_sprites, list_ghost
 
 
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 200
+        self.dy = 200
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - tile_height // 2)
+
+
+# НАЧАЛО ПРОГРАММЫ
+
+# группы спрайтов
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+wall_group = pygame.sprite.Group()
+coins_group = pygame.sprite.Group()
+ghost_group = pygame.sprite.Group()
+cherry_group = pygame.sprite.Group()
+point_group = pygame.sprite.Group()
+life_group = pygame.sprite.Group()
+
+pygame.init()
+
+tile_width = tile_height = 40
+clock = pygame.time.Clock()
+
+opened_levels = 1
+
+x = 15
+y = 16
+
+size = WIDTH, HEIGHT = x * tile_width, y * tile_height
+screen = pygame.display.set_mode(size)
+
+StartScreen(WIDTH, HEIGHT)
+last_level = False
+
+player = Player(-1, -1)
+player.status = 'идет игра'
+while True:
+    all_sprites = pygame.sprite.Group()
+    tiles_group = pygame.sprite.Group()
+    player_group = pygame.sprite.Group()
+    wall_group = pygame.sprite.Group()
+    coins_group = pygame.sprite.Group()
+    ghost_group = pygame.sprite.Group()
+    cherry_group = pygame.sprite.Group()
+    point_group = pygame.sprite.Group()
+    life_group = pygame.sprite.Group()
+
+    if player.status == 'конец игры':
+        last_level = True
+
+    if last_level:
+        print('STOP')
+        break
+
+    n_level = str(level_choose())
+    if int(n_level) == 4:
+        last_level = True
+
+    player, x, y, list_sprites, list_ghost = generate_level(
+        load_level('level_' + n_level + '.txt'))
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+                pygame.quit()
+        for key, func in [(pygame.K_d, player.right), (pygame.K_a, player.left),
+                          (pygame.K_s, player.down), (pygame.K_w, player.up)]:
+            if pygame.key.get_pressed()[key]:
+                func()
+
+        if player.status == 'конец игры':
+            game_over()
+            break
+
+        if player.status == 'идет игра':
+            all_sprites.update()
+            screen.fill((0, 0, 0))
+            tiles_group.draw(screen)
+            wall_group.draw(screen)
+            coins_group.draw(screen)
+            cherry_group.draw(screen)
+            point_group.draw(screen)
+            player_group.draw(screen)
+            ghost_group.draw(screen)
+            life_group.draw(screen)
+
+            player.score_print()
+            pygame.display.flip()
+            clock.tick(60)
+        if player.status == 'монстр':
+            try_again()
+        if player.status == 'выигрыш':
+            win()
+            break
+
+game_end()
