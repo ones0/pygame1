@@ -28,13 +28,13 @@ def game_end():
     game_name_text_rect.y = HEIGHT - 58
     screen.blit(text_rendered, game_name_text_rect)
 
-    game_result_text = ('Ваш резельтат: ' + str(player.score))
+    game_result_text = ('Ваш результат: ' + str(player.score))
     text_rendered = font.render(game_result_text, 1, pygame.Color('white'))
     game_result_text_rect = text_rendered.get_rect()
     game_result_text_rect.x = 150
     game_result_text_rect.y = 22
     screen.blit(text_rendered, game_result_text_rect)
-    print('Ваш резельтат: ', player.score)
+    print('Ваш результат: ', player.score)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -118,7 +118,7 @@ def win():  # победа
     screen.blit(fon, (0, 0))
     font = pygame.font.Font('font.ttf', 26)
 
-    game_win_text = ['ПОДЕДА!!', '', '', '', '', '', '', '', '',
+    game_win_text = ['ПОБЕДА!!', '', '', '', '', '', '', '', '',
                      'Нажмите ЛКМ']
 
     text_coord = 20
